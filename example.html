@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Line Chart Example</title>
+</head>
+
+<body>
+
+<link type="text/css" rel="stylesheet" href="css/style.css">
+<script type="text/javascript" src="d3/d3.v3.js"></script>
+
+<div id="line-chart-0"></div>s
+
+<script type="text/javascript">
+
+    <!--  -->
+
+    var formatTime = d3.time.format("%e %B");
+    var div = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+    function numberWithCommas(x) {
+        "use strict";
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function test() { return function(id) { return id + 1; } }
+
+    function get_chart(id, title) {
+        "use strict";
+        return function(data) {
+            var maxval = 0, sampsize = 0;
+            var label_array = [], val_array = [];
+
+            sampsize = data.length;
+
+            // Format Data
+            for (var i=0; i < sampsize; i++) {
+                label_array[i] = new Date(data[i][0]);
+                val_array[i] = { x: label_array[i], y: parseInt(data[i][1], 10) };
+                maxval = Math.max(maxval, parseFloat(data[i][1]));
+            }
+
+            // Max element
+            maxval = (1 + Math.floor(maxval / 10)) * 10;
+
+            var  w = 815, h = 300, p = 100,
+                    x = d3.time.scale().domain([ label_array[0], label_array[sampsize-1] ]).range([0, w]),
+                    y = d3.scale.linear().domain([0, maxval]).range([h, 0]);
+
+            var vis = d3.select("#line-chart-".concat(id))
+                    .data([val_array])
+                    .append("svg:svg")
+                    .attr("width", w + p * 2)
+                    .attr("height", h + p * 2)
+                    .append("svg:g")
+                    .attr("transform", "translate(" + p + "," + p + ")");
+
+            var rules = vis.selectAll("g.rule")
+                    .data(x.ticks(15))
+                    .enter().append("svg:g")
+                    .attr("class", "rule");
+
+            var y_axis = d3.svg.axis().scale(y).orient("left");
+            var x_axis  = d3.svg.axis().scale(x);
+
+            // Draw grid lines
+            // ===============
+
+            rules.append("svg:line")
+                    .attr("x1", x)
+                    .attr("x2", x)
+                    .attr("y1", 0)
+                    .attr("y2", h - 1);
+
+            rules.append("svg:line")
+                    .attr("class", function(d) { return d ? null : "axis"; })
+                    .data(y.ticks(10))
+                    .attr("y1", y)
+                    .attr("y2", y)
+                    .attr("x1", 0)
+                    .attr("x2", w - 10);
+
+
+            // Draw Axes
+            // =========
+
+            d3.select("#line-chart-".concat(id))
+                    .select("svg")
+                    .append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(" + p + "," + (h + p)  + ")")
+                    .call(x_axis);
+
+            d3.select("#line-chart-".concat(id)).
+                    select(".x.axis")
+                    .append("text")
+                    .text("Date")
+                    .attr("x", (w / 2) - p)
+                    .attr("y", p / 3);
+
+            d3.select("#line-chart-".concat(id))
+                    .select("svg")
+                    .append("g")
+                    .attr("class", "y axis")
+                    .attr("transform", "translate(" + p + "," + p + ")")
+                    .call(y_axis);
+
+
+            // Draw the series
+            // ===============
+
+            vis.append("svg:path")
+                    .attr("class", "line")
+                    .attr("fill", "none")
+                    .attr("stroke", "maroon")
+                    .attr("stroke-width", 1)
+                    .attr("d", d3.svg.line()
+                            .x(function(d) { return x(d.x); })
+                            .y(function(d) { return y(d.y); }));
+
+            vis.selectAll("circle.line")
+                    .data(val_array)
+                    .enter().append("svg:circle")
+                    .attr("class", "line")
+                    .attr("fill", "maroon" )
+                    .attr("cx", function(d) { return x(d.x); })
+                    .attr("cy", function(d) { return y(d.y); })
+                    .attr("r", 3)
+                    .on("mouseover", function(d) {
+                        div.transition()
+                                .duration(200)
+                                .style("opacity", 0.9);
+                        div .html(formatTime(d.x) + "<br/>"  + numberWithCommas(d.y))
+                                .style("left", (d3.event.pageX) + "px")
+                                .style("top", (d3.event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function() {
+                        div.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                    });
+
+            vis.append("svg:text")
+                    .attr("x", w/2)
+                    .attr("y", 0)
+                    .text(title);
+        };
+    }
+
+    // Plot some data
+    
+    var time_series_data = [];
+    time_series_data[0] = ["2013-05-01", 200];
+    time_series_data[1] = ["2013-05-02", 210];
+    time_series_data[2] = ["2013-05-03", 100];
+    time_series_data[3] = ["2013-05-04", 110];
+    time_series_data[4] = ["2013-05-05", 220];
+    time_series_data[5] = ["2013-05-06", 230];
+    time_series_data[6] = ["2013-05-07", 180];
+    time_series_data[7] = ["2013-05-08", 170];
+    time_series_data[8] = ["2013-05-09", 150];
+    time_series_data[9] = ["2013-05-10", 200];
+
+    get_chart(0, "Test")(time_series_data);
+
+</script>
+</body>
+</html>
