@@ -12,7 +12,7 @@
 
 "use strict";
 
-var formatTime = d3.time.format("%e %B");
+var timeFormat = d3.time.format("%e %B");
 var div = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
@@ -37,7 +37,7 @@ function getChart(id, title) {
          *  "data" should contain attributes 'time_of_record' (date string) and 'count' (integer)
          */
 
-        var maxValue = 0, sampleSize = 0;
+        var maxValue = 0, sampleSize;
         var labelArray = [], valueArray = [];
 
         sampleSize = data.length;
@@ -70,7 +70,7 @@ function getChart(id, title) {
             .attr("class", "rule");
 
         var y_axis = d3.svg.axis().scale(y).orient("left");
-        var x_axis  = d3.svg.axis().scale(x);
+        var x_axis  = d3.svg.axis().scale(x).tickFormat(timeFormat);
 
         // Draw grid lines
         // ===============
@@ -139,7 +139,7 @@ function getChart(id, title) {
                 div.transition()
                     .duration(200)
                     .style("opacity", 0.9);
-                div .html(formatTime(d.x) + "<br/>"  + numberWithCommas(d.y))
+                div .html(timeFormat(d.x) + "<br/>"  + numberWithCommas(d.y))
                     .style("left", (d3.event.pageX) + "px")
                     .style("top", (d3.event.pageY - 28) + "px");
             })
