@@ -152,6 +152,7 @@ function getChart(id, title) {
         vis.append("svg:text")
             .attr("x", w/2)
             .attr("y", 0)
-            .text(title);
+            .text(title)
+            .attr("class", "underline");
     };
 }
