@@ -171,9 +171,9 @@ function getChart(id, title) {
                     .style("opacity", 0);
             });
 
-        chart_obj.vis.append("svg:text")
-            .attr("x", w/2)
-            .attr("y", 0)
+        chart_obj.frame.append("svg:text")
+            .attr("x", chart_obj.w / 2 + chart_obj.p)
+            .attr("y", chart_obj.p - chart_obj.p / 10)
             .text(title)
             .attr("class", "underline");
     };
