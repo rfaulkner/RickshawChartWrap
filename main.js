@@ -22,6 +22,61 @@ function numberWithCommas(x) {
 	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+/**
+ * Unpacks data timestamp and count data into SVG Chart Object
+ *
+ * @param data      - array of tuples containing date stamp and count
+ * @param id        - id of chart element
+ */
+function d3SVGChartObject(/* array[[str, int], ...] */ data,
+                          /* int */ id) {
+    this.max = 0;
+    this.labels = [];
+    this.values = [];
+
+    // Unpack the chart data
+    for (var i=0; i < data.length; i++) {
+
+        this.labels[i] = new Date(data[i][0]);
+
+        this.values[i] = {
+            x: this.labels[i],
+            y: parseInt(data[i][1], 10)
+        };
+
+        this.max = Math.max(this.max, parseFloat(data[i][1]));
+    }
+
+    // Max element
+    this.max = (1 + Math.floor(this.max / 10)) * 10;
+
+    // Set the frame width, height, and offset
+    this.w = 815;
+    this.h = 300;
+    this.p = 100;
+
+    this.x = d3.time.scale().domain([ this.labels[0], this.labels[data.length-1] ]).range([0, this.w]);
+    this.y = d3.scale.linear().domain([0, this.max]).range([this.h, 0]);
+
+    this.frame = d3.select("#line-chart-".concat(id))
+        .data([this.values])
+        .append("svg:svg")
+        .attr("width", this.w + this.p * 2)
+        .attr("height", this.h + this.p * 2);
+
+    this.vis = this.frame.append("svg:g")
+        .attr("transform", "translate(" + this.p + "," + this.p + ")");
+
+    this.rules = this.vis.selectAll("g.rule")
+        .data(this.x.ticks(15))
+        .enter().append("svg:g")
+        .attr("class", "rule");
+
+    this.y_axis = d3.svg.axis().scale(this.y).orient("left");
+    this.x_axis  = d3.svg.axis().scale(this.x).tickFormat(timeFormat);
+}
+
+
 /*
 *  Returns a closure that can be called to generate a "line-chart" element
 *
@@ -37,57 +92,24 @@ function getChart(id, title) {
          *  "data" should contain attributes 'time_of_record' (date string) and 'count' (integer)
          */
 
-        var maxValue = 0, sampleSize;
-        var labelArray = [], valueArray = [];
-
-        sampleSize = data.length;
-
-        // Format Data
-        for (var i=0; i < sampleSize; i++) {
-            labelArray[i] = new Date(data[i][0]);
-            valueArray[i] = { x: labelArray[i], y: parseInt(data[i][1], 10) };
-            maxValue = Math.max(maxValue, parseFloat(data[i][1]));
-        }
-
-        // Max element
-        maxValue = (1 + Math.floor(maxValue / 10)) * 10;
-
-        var  w = 815, h = 300, p = 100,
-            x = d3.time.scale().domain([ labelArray[0], labelArray[sampleSize-1] ]).range([0, w]),
-            y = d3.scale.linear().domain([0, maxValue]).range([h, 0]);
-
-        var vis = d3.select("#line-chart-".concat(id))
-            .data([valueArray])
-            .append("svg:svg")
-            .attr("width", w + p * 1.5)
-            .attr("height", h + p * 1.5)
-            .append("svg:g")
-            .attr("transform", "translate(" + p + "," + p + ")");
-
-        var rules = vis.selectAll("g.rule")
-            .data(x.ticks(15))
-            .enter().append("svg:g")
-            .attr("class", "rule");
-
-        var y_axis = d3.svg.axis().scale(y).orient("left");
-        var x_axis  = d3.svg.axis().scale(x).tickFormat(timeFormat);
+        var chart_obj = new d3SVGChartObject(data, id);
 
         // Draw grid lines
         // ===============
 
-        rules.append("svg:line")
-            .attr("x1", x)
-            .attr("x2", x)
+        chart_obj.rules.append("svg:line")
+            .attr("x1", chart_obj.x)
+            .attr("x2", chart_obj.x)
             .attr("y1", 0)
-            .attr("y2", h - 1);
+            .attr("y2", chart_obj.h - 1);
 
-        rules.append("svg:line")
+        chart_obj.rules.append("svg:line")
             .attr("class", function(d) { return d ? null : "axis"; })
-            .data(y.ticks(10))
-            .attr("y1", y)
-            .attr("y2", y)
+            .data(chart_obj.y.ticks(10))
+            .attr("y1", chart_obj.y)
+            .attr("y2", chart_obj.y)
             .attr("x1", 0)
-            .attr("x2", w - 10);
+            .attr("x2", chart_obj.w - 10);
 
 
         // Draw Axes
@@ -97,43 +119,43 @@ function getChart(id, title) {
             .select("svg")
             .append("g")
             .attr("class", "x axis")
-            .attr("transform", "translate(" + p + "," + (h + p)  + ")")
-            .call(x_axis);
+            .attr("transform", "translate(" + chart_obj.p + "," + (chart_obj.h + chart_obj.p)  + ")")
+            .call(chart_obj.x_axis);
 
         d3.select("#line-chart-".concat(id)).
             select(".x.axis")
             .append("text")
             .text("Date")
-            .attr("x", (w / 2) - p)
-            .attr("y", p / 3);
+            .attr("x", (chart_obj.w / 2) - chart_obj.p)
+            .attr("y", chart_obj.p / 3);
 
         d3.select("#line-chart-".concat(id))
             .select("svg")
             .append("g")
             .attr("class", "y axis")
-            .attr("transform", "translate(" + p + "," + p + ")")
-            .call(y_axis);
+            .attr("transform", "translate(" + chart_obj.p + "," + chart_obj.p + ")")
+            .call(chart_obj.y_axis);
 
 
         // Draw the series
         // ===============
 
-        vis.append("svg:path")
+        chart_obj.vis.append("svg:path")
             .attr("class", "line")
             .attr("fill", "none")
             .attr("stroke", "maroon")
             .attr("stroke-width", 1)
             .attr("d", d3.svg.line()
-                .x(function(d) { return x(d.x); })
-                .y(function(d) { return y(d.y); }));
+                .x(function(d) { return chart_obj.x(d.x); })
+                .y(function(d) { return chart_obj.y(d.y); }));
 
-        vis.selectAll("circle.line")
+        chart_obj.vis.selectAll("circle.line")
             .data(valueArray)
             .enter().append("svg:circle")
             .attr("class", "line")
             .attr("fill", "maroon" )
-            .attr("cx", function(d) { return x(d.x); })
-            .attr("cy", function(d) { return y(d.y); })
+            .attr("cx", function(d) { return chart_obj.x(d.x); })
+            .attr("cy", function(d) { return chart_obj.y(d.y); })
             .attr("r", 3)
             .on("mouseover", function(d) {
                 div.transition()
@@ -149,7 +171,7 @@ function getChart(id, title) {
                     .style("opacity", 0);
             });
 
-        vis.append("svg:text")
+        chart_obj.vis.append("svg:text")
             .attr("x", w/2)
             .attr("y", 0)
             .text(title)
