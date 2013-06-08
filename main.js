@@ -74,124 +74,123 @@ function d3SVGChartObject(/* array[[str, int], ...] */ data,
 
     this.y_axis = d3.svg.axis().scale(this.y).orient("left");
     this.x_axis  = d3.svg.axis().scale(this.x).tickFormat(timeFormat);
-}
 
-/**
- * Draws a path based on a chart object,
- *
- * @param chart_obj       - chart object on which to draw.
- * @param stroke_clr      - stroke colour.
- * @param stroke_width    - stroke width.
- */
-function drawSVGPath(/* d3SVGChartObject */ chart_obj,
-                     /* string */ stroke_clr,
-                     /* int */ stroke_width) {
-    chart_obj.vis.append("svg:path")
-        .attr("class", "line")
-        .attr("fill", "none")
-        .attr("stroke", stroke_clr)
-        .attr("stroke-width", stroke_width)
-        .attr("d", d3.svg.line()
-            .x(function(d) { return chart_obj.x(d.x); })
-            .y(function(d) { return chart_obj.y(d.y); }));
-    return chart_obj;
-}
+    /**
+     * Draws a path based on a chart object,
+     *
+     * @param stroke_clr      - stroke colour.
+     * @param stroke_width    - stroke width.
+     * @param index           - index of 'y' value.  Defaults to 1.
+     */
+    this.drawSVGPath = function (/* string */ stroke_clr, /* int */ stroke_width, /* int */ index) {
+        if(typeof(index)==='undefined') index = 1;
+        var x = this.x;
+        var y = this.y;
+        this.vis.append("svg:path")
+            .attr("class", "line")
+            .attr("fill", "none")
+            .attr("stroke", stroke_clr)
+            .attr("stroke-width", stroke_width)
+            .attr("d", d3.svg.line()
+                .x(function(d) { return x(d.x); })
+                .y(function(d) { return y(d['y' + index]); }));
+        return this;
+    };
 
-/**
- * Draws a grid over an SVG chart object
- *
- * @param chart_obj       - chart object on which to draw.
- */
-function drawSVGGrid(/* d3SVGChartObject */ chart_obj) {
-    chart_obj.rules.append("svg:line")
-        .attr("x1", chart_obj.x)
-        .attr("x2", chart_obj.x)
-        .attr("y1", 0)
-        .attr("y2", chart_obj.h - 1);
 
-    chart_obj.rules.append("svg:line")
-        .attr("class", function(d) { return d ? null : "axis"; })
-        .data(chart_obj.y.ticks(10))
-        .attr("y1", chart_obj.y)
-        .attr("y2", chart_obj.y)
-        .attr("x1", 0)
-        .attr("x2", chart_obj.w - 10);
-    return chart_obj
-}
+    /**
+     * Draws tooltip points over a path defined on the chart object.
+     *
+     * @param index           - index of 'y' value.  Defaults to 1.
+     * @param radius          - tune radius of circle.  Defaults to 2.
+     */
+    this.drawSVGTooltipPoints = function (/* int */ index, /* int */ radius) {
+        if(typeof(index)==='undefined') index = 1;
+        if(typeof(radius)==='undefined') radius = 2;
+        var x = this.x;
+        var y = this.y;
+        this.vis.selectAll("circle.line" + index)
+            .data(this.values)
+            .enter()
+            .append("svg:circle")
+            .attr("class", "line")
+            .attr("cx", function(d) { return x(d.x); })
+            .attr("cy", function(d) { return y(d['y' + index]); })
+            .attr("r", radius)
+            .on("mouseover", function(d) {
+                div.transition()
+                    .duration(200)
+                    .style("opacity", 0.9);
+                div .html(timeFormat(d.x) + "<br/>"  + numberWithCommas(d['y' + index]))
+                    .style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                div.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+        return this;
+    };
 
-/**
- * Draws axes over an SVG chart object.
- *
- * @param chart_obj       - chart object on which to draw.
- */
-function drawSVGAxes(/* d3SVGChartObject */ chart_obj, id) {
-    d3.select("#line-chart-".concat(id))
-        .select("svg")
-        .append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(" + chart_obj.p + "," + (chart_obj.h + chart_obj.p)  + ")")
-        .call(chart_obj.x_axis);
+    /**
+     * Draws a grid over an SVG chart object
+     */
+    this.drawSVGGrid = function () {
+        this.rules.append("svg:line")
+            .attr("x1", this.x)
+            .attr("x2", this.x)
+            .attr("y1", 0)
+            .attr("y2", this.h - 1);
+        this.rules.append("svg:line")
+            .attr("class", function (d) { return d ? null : "axis"; })
+            .data(this.y.ticks(10))
+            .attr("y1", this.y)
+            .attr("y2", this.y)
+            .attr("x1", 0)
+            .attr("x2", this.w - 10);
+        return this;
+    };
 
-    d3.select("#line-chart-".concat(id)).
-        select(".x.axis")
-        .append("text")
-        .text("Date")
-        .attr("x", (chart_obj.w / 2))
-        .attr("y", chart_obj.p / 3);
+    /**
+     * Draws axes over an SVG chart object.
+     */
+    this.drawSVGAxes = function (id) {
+        d3.select("#line-chart-".concat(id))
+            .select("svg")
+            .append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(" + this.p + "," + (this.h + this.p)  + ")")
+            .call(this.x_axis);
+        d3.select("#line-chart-".concat(id)).
+            select(".x.axis")
+            .append("text")
+            .text("Date")
+            .attr("x", (this.w / 2))
+            .attr("y", this.p / 2);
+        d3.select("#line-chart-".concat(id))
+            .select("svg")
+            .append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + this.p + "," + this.p + ")")
+            .call(this.y_axis);
+        return this;
+    };
 
-    d3.select("#line-chart-".concat(id))
-        .select("svg")
-        .append("g")
-        .attr("class", "y axis")
-        .attr("transform", "translate(" + chart_obj.p + "," + chart_obj.p + ")")
-        .call(chart_obj.y_axis);
-    return chart_obj;
-}
 
-/**
- * Draws tooltip points over a path defined on the chart object.
- *
- * @param chart_obj       - chart object on which to draw.
- */
-function drawSVGTooltipPoints(/* d3SVGChartObject */ chart_obj) {
-    chart_obj.vis.selectAll("circle.line")
-        .data(chart_obj.values)
-        .enter().append("svg:circle")
-        .attr("class", "line")
-        .attr("fill", "maroon" )
-        .attr("cx", function(d) { return chart_obj.x(d.x); })
-        .attr("cy", function(d) { return chart_obj.y(d.y); })
-        .attr("r", 3)
-        .on("mouseover", function(d) {
-            div.transition()
-                .duration(200)
-                .style("opacity", 0.9);
-            div .html(timeFormat(d.x) + "<br/>"  + numberWithCommas(d.y))
-                .style("left", (d3.event.pageX) + "px")
-                .style("top", (d3.event.pageY - 28) + "px");
-        })
-        .on("mouseout", function() {
-            div.transition()
-                .duration(500)
-                .style("opacity", 0);
-        });
-    return chart_obj;
-}
-
-/**
- * Draws a path based on a chart object.
- *
- * @param chart_obj       - chart object on which to draw.
- * @param stroke_clr      - stroke colour.
- * @param stroke_width    - stroke width.
- */
-function drawSVGChartTitle(/* d3SVGChartObject */ chart_obj, title) {
-    chart_obj.frame.append("svg:text")
-        .attr("x", chart_obj.w / 2 + chart_obj.p)
-        .attr("y", chart_obj.p - chart_obj.p / 10)
-        .text(title)
-        .attr("class", "underline");
-    return chart_obj;
+    /**
+     * Draws a path based on a chart object.
+     *
+     * @param title      - Plot title.
+     */
+    this.drawSVGChartTitle = function (title) {
+        this.frame.append("svg:text")
+            .attr("x", this.p)
+            .attr("y", this.p - this.p / 2)
+            .text(title)
+            .attr("class", "underline");
+        return this;
+    };
 }
 
 /*
@@ -204,13 +203,14 @@ function drawSVGChartTitle(/* d3SVGChartObject */ chart_obj, title) {
 */
 function getChart(id, title) {
     return function(data) {
-        var chart_obj = new d3SVGChartObject(data, id);
+        var width = 815, height = 300, buffer = 70;
+        var chart_obj = new d3SVGChartObject(data, id, width, height, buffer);
 
         // Render the plot
-        drawSVGGrid(chart_obj);
-        drawSVGAxes(chart_obj, id);
-        drawSVGPath(chart_obj, "maroon", 1);
-        drawSVGTooltipPoints(chart_obj);
-        drawSVGChartTitle(chart_obj, title);
+        chart_obj.drawSVGGrid()
+            .drawSVGAxes(id)
+            .drawSVGPath("maroon",1)
+            .drawSVGTooltipPoints()
+            .drawSVGChartTitle(title)
     };
 }
