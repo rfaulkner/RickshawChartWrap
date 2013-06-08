@@ -191,6 +191,43 @@ function d3SVGChartObject(/* array[[str, int], ...] */ data,
             .attr("class", "underline");
         return this;
     };
+
+    /**
+     * Draws a path based on a chart object.
+     *
+     * @param title         - Plot title.
+     * @param items         - [{"colour": str, "name": str}+]
+     * @param x             - Plot title.
+     * @param y             - Plot title.
+     * @param x_offset      - Plot title.
+     * @param y_offset      - Plot title.
+     */
+    this.drawSVGLegend = function (title, items, x, y, x_offset, y_offset) {
+
+        this.vis.append("svg:text")
+            .attr("x", x)
+            .attr("y", y)
+            .text(title)
+            .attr("class", "legend_title");
+
+        // TODO - Add a background
+
+        for (var i=0; i < items.length; i++) {
+            this.vis.append("svg:rect")
+                .attr("x", x + x_offset)
+                .attr("y", y + y_offset * (i + 1) - y_offset * 0.6)
+                .attr("stroke", items[i].colour)
+                .attr("fill", items[i].colour)
+                .attr("height", y_offset * 0.3)
+                .attr("width", y_offset * 0.6);
+
+            this.vis.append("svg:text")
+                .attr("x", x + x_offset + 20)
+                .attr("y", y + y_offset * (i + 1))
+                .text(items[i].name)
+                .attr("class", "legend_item");
+        }
+    };
 }
 
 /*
