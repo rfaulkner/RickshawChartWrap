@@ -251,6 +251,31 @@ function d3SVGChartObject(/* array[[str, int], ...] */ data,
 }
 
 /*
+ *  Synthesizes a formatted data list for multiple curves
+ *
+ *  Parameters:
+ *      @data       - array of chart data arrays
+ */
+function composeMultiData(data) {
+
+    var i,j; // index counters
+
+    var num_curves = data.length;
+    var num_data_points = data[0].length;
+    var multi_data = [];
+
+    // Compose seperate plots into one
+    for (i=0; i < num_data_points; i++) {
+        multi_data[i] = [];
+        multi_data[i].push(data[0][i][0]);
+        for (j=0; j < num_curves; j++) {
+            multi_data[i].push(data[j][i][1]);
+        }
+    }
+    return multi_data;
+}
+
+/*
 *  Returns a closure that can be called to generate a "line-chart" element
 *
 *  Parameters:
