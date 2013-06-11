@@ -195,12 +195,12 @@ function d3SVGChartObject(/* array[[str, int], ...] */ data,
     /**
      * Draws a path based on a chart object.
      *
-     * @param title         - Plot title.
-     * @param items         - [{"colour": str, "name": str}+]
-     * @param x             - Plot title.
-     * @param y             - Plot title.
-     * @param x_offset      - Plot title.
-     * @param y_offset      - Plot title.
+     * @param title         - Legend title.
+     * @param items         - Item data = [{"colour": str, "name": str}+]
+     * @param x             - Legend offset within SVG frame.
+     * @param y             - Legend offset within SVG frame.
+     * @param x_offset      - Legend object offset within legend frame.
+     * @param y_offset      - Legend object offset within legend frame.
      */
     this.drawSVGLegend = function (title, items, x, y, x_offset, y_offset) {
 
@@ -215,7 +215,7 @@ function d3SVGChartObject(/* array[[str, int], ...] */ data,
         for (var i=0; i < items.length; i++) {
             this.vis.append("svg:rect")
                 .attr("x", x + x_offset)
-                .attr("y", y + y_offset * (i + 1) - y_offset * 0.6)
+                .attr("y", y + y_offset * (i + 1) - y_offset * 0.4)
                 .attr("stroke", items[i].colour)
                 .attr("fill", items[i].colour)
                 .attr("height", y_offset * 0.3)
