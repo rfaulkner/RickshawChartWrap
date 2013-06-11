@@ -97,7 +97,6 @@ function d3SVGChartObject(/* array[[str, int], ...] */ data,
         return this;
     };
 
-
     /**
      * Draws tooltip points over a path defined on the chart object.
      *
@@ -130,6 +129,27 @@ function d3SVGChartObject(/* array[[str, int], ...] */ data,
                     .duration(500)
                     .style("opacity", 0);
             });
+        return this;
+    };
+
+    /**
+     * Draws a path based on a chart object.
+     *
+     * @param chart_data      - Array of meta data for charts = [{colour: , index: },+].
+     * @param stroke_width    - stroke width. Defaults to STROKE_WIDTH.
+     * @param bubble_radius   - tune radius of circle.  Defaults to BUBBLE_RADIUS.
+     */
+    this.drawCharts = function (/* Array of JSON */ chart_data,
+                                /* Integer */ stroke_width,
+                                /* Integer */ bubble_radius) {
+
+        if(typeof(stroke_width)==='undefined') stroke_width = STROKE_WIDTH;
+        if(typeof(v)==='undefined') bubble_radius = BUBBLE_RADIUS;
+
+        for (i=0; i < chart_data.length; i++) {
+            this.drawSVGPath(chart_data[i].index, stroke_width, chart_data[i].colour)
+                .drawSVGTooltipPoints(chart_data[i].index, bubble_radius);
+        }
         return this;
     };
 
