@@ -1,0 +1,97 @@
+div, span, p, td {
+    font-family: Arial, sans-serif;
+}
+.content {
+    width: 1200px;
+}
+.chart {
+    display: inline-block;
+    position: relative;
+    left: 40px;
+}
+.chart path {
+    -webkit-transition: opacity 0.2s linear;
+}
+.slider {
+    margin-top: 10px;
+    position: relative;
+    left: 40px;
+}
+.legend {
+    display: inline-block;
+    position: relative;
+    left: 8px;
+}
+.y_axis {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+}
+#legend_container {
+    position: absolute;
+    right: 0;
+    bottom: 26px;
+    width: 0;
+}
+.chart_container {
+    position: relative;
+    display: inline-block;
+    font-family: Arial, Helvetica, sans-serif;
+}
+#smoother {
+    margin: 0 0 10px 16px;
+    width: 100px;
+}
+.rickshaw_graph .detail {
+    left: -1000;
+}
+.chart {
+    border: 1px solid #f0f0f0;
+}
+.side_panel {
+    padding: 0 20px 20px 0;
+    width: 240px;
+    display: inline-block;
+    vertical-align: top;
+}
+.side_panel section {
+    color: #505050;
+    font-size: 12px;
+}
+.side_panel section h6 {
+    margin: 0 0 1em 0;
+    font-size: 12px;
+    font-weight: normal;
+}
+.side_panel .ui-slider-horizontal {
+    height: 1px !important;
+    border-color: #e0e0e0;
+    margin-bottom: 10px;
+}
+.side_panel .ui-slider-handle {
+    border-color: #a0a0a0;
+    height: 9px !important;
+    width: 9px !important;
+    top: -5px !important;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+}
+h1 {
+    font-family: Franklin Gothic Medium, UnDotum, Helvetica, Arial;
+    font-weight: normal;
+    font-size: 20px;
+}
+section {
+    border: none;
+    border-top: 1px solid #eaeaea;
+    padding: 15px 0;
+}
+#smoother {
+    margin: 5px 0 0 10px;
+    width: 90%;
+}
+label.disabled {
+    opacity: 0.4;
+}
