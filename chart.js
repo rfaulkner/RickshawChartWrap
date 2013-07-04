@@ -45,11 +45,18 @@ function chartFactory(/* int */ id,
  * @param id            - Chart id.
  * @param series_data   - [{data: [{x: <x>, y: <y>},+] color: <color>, name: <name>},+]
  * @param render_type   - Rickshaw render type of the plot.
+ * @param width   - Chart width (OPTIONAL).
+ * @param height   - Chart height (OPTIONAL).
  *
  */
 function Chart(/* int */ id,
                /* Array */ series_data,
-               /* Array */ render_type) {
+               /* Array */ render_type,
+               /* int */ width,
+               /* int */ height) {
+
+    if(typeof(width)==='undefined') width = WIDTH;
+    if(typeof(height)==='undefined') height = HEIGHT;
 
     this.id = id;
     this.series_data = series_data;
@@ -64,8 +71,8 @@ function Chart(/* int */ id,
 
         this.graph = new Rickshaw.Graph( {
             element: document.querySelector("#chart" + this.id),
-            width: WIDTH,
-            height: HEIGHT,
+            width: width,
+            height: height,
             renderer: this.render_type,
             preserve: true,
             series: this.series_data,
