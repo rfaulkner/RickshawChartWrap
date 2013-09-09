@@ -24,18 +24,21 @@ var HEIGHT = 300;
  * @param id            - Chart id.
  * @param series_data   - [{data: [{x: <x>, y: <y>},+] color: <color>, name: <name>},+]
  * @param render_type   - Rickshaw render type of the plot.
+ * @param docs          - comments for this chart.
  *
  */
 function chartFactory(/* int */ id,
                       /* Array */ series_data,
-                      /* String */ render_type) {
+                      /* String */ render_type,
+                      /* String */ docs) {
 
-    return new Chart(id, series_data, render_type).
+    return new Chart(id, series_data, render_type, docs).
         buildGraph().
         buildSlider().
         buildHoverDetail().
         buildAxes().
-        buildLegend();
+        buildLegend().
+        buildDocs(docs);
 }
 
 
@@ -45,18 +48,11 @@ function chartFactory(/* int */ id,
  * @param id            - Chart id.
  * @param series_data   - [{data: [{x: <x>, y: <y>},+] color: <color>, name: <name>},+]
  * @param render_type   - Rickshaw render type of the plot.
- * @param width   - Chart width (OPTIONAL).
- * @param height   - Chart height (OPTIONAL).
  *
  */
 function Chart(/* int */ id,
                /* Array */ series_data,
-               /* Array */ render_type,
-               /* int */ width,
-               /* int */ height) {
-
-    if(typeof(width)==='undefined') width = WIDTH;
-    if(typeof(height)==='undefined') height = HEIGHT;
+               /* Array */ render_type) {
 
     this.id = id;
     this.series_data = series_data;
@@ -71,8 +67,8 @@ function Chart(/* int */ id,
 
         this.graph = new Rickshaw.Graph( {
             element: document.querySelector("#chart" + this.id),
-            width: width,
-            height: height,
+            width: WIDTH,
+            height: HEIGHT,
             renderer: this.render_type,
             preserve: true,
             series: this.series_data,
@@ -137,8 +133,6 @@ function Chart(/* int */ id,
 
     /*
      * Create a CSV from the series data.
-     *
-     * @param series_data   - [{data: [{x: <x>, y: <y>},+] color: <color>, name: <name>},+]
      */
     this.getCSV = function () {
         var i,j;
@@ -151,6 +145,17 @@ function Chart(/* int */ id,
             }
         }
         return out;
+    };
+
+    /*
+     * Add documentation to the chart.
+     *
+     * @param text   - The documentation content.
+     */
+    this.buildDocs = function (/* String */ text) {
+        this.docs =  text != undefined ? text : '_';
+        document.getElementById("chart_docs" + this.id).innerHTML = this.docs;
+        return this;
     };
 
     return this;
