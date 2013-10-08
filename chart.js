@@ -158,5 +158,22 @@ function Chart(/* int */ id,
         return this;
     };
 
+     /*
+     * Add annotation to the chart.
+     *
+     * @param timestamp     - Timestamp of annotation.
+     * @param message       - Annotation text.
+     */
+    this.buildAnnotaton = function (/* String */ timestamp, /* String */ message) {
+
+        console.log('annotate');
+        var annotator = new Rickshaw.Graph.Annotate({
+            graph: this.graph,
+            element: document.getElementById("timeline" + this.id)
+        });
+        annotator.add(timestamp, message);
+        return this;
+    };
+
     return this;
 }
