@@ -164,9 +164,8 @@ function Chart(/* int */ id,
      * @param timestamp     - Timestamp of annotation.
      * @param message       - Annotation text.
      */
-    this.buildAnnotaton = function (/* String */ timestamp, /* String */ message) {
+    this.buildAnnotaton = function (/* int */ timestamp, /* String */ message) {
 
-        console.log('annotate');
         var annotator = new Rickshaw.Graph.Annotate({
             graph: this.graph,
             element: document.getElementById("timeline" + this.id)
