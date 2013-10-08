@@ -17,6 +17,20 @@ div, span, p, td {
     position: relative;
     left: 40px;
 }
+.timeline {
+    margin-top: 10px;
+    position: relative;
+    left: 40px;
+}
+.chart_docs {
+    margin-left: 75px;
+    margin-top: 25px;
+    width: 400px;
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    font-family:"Courier New",Courier,monospace;
+}
 .legend {
     display: inline-block;
     position: relative;
