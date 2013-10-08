@@ -88,7 +88,17 @@ function Chart(/* int */ id,
 
     this.buildHoverDetail = function () {
         this.hoverDetail = new Rickshaw.Graph.HoverDetail( {
-            graph: this.graph
+            graph: this.graph,
+            formatter: function(series, x, y) {
+                var numberWithCommas;
+                numberWithCommas = function (/* int */ value) {
+                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                };
+                var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
+                var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+                return swatch + series.name + ": " + numberWithCommas(y) + '<br>' + date;
+            },
+            xFormatter: function(x) { return '' }
         });
         return this;
     };
