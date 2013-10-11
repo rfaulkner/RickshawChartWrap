@@ -17,6 +17,7 @@
 // Chart dimensions
 var WIDTH = 640;
 var HEIGHT = 300;
+var MILLISECONDS_PER_DAY = 3600000 * 24;
 
 /**
  * Create chart elements based on Rickshaw library.
@@ -30,17 +31,83 @@ var HEIGHT = 300;
 function chartFactory(/* int */ id,
                       /* Array */ series_data,
                       /* String */ render_type,
-                      /* String */ docs) {
+                      /* String */ docs,
+                      /* string */ formatter_handle
+    ) {
 
-    return new Chart(id, series_data, render_type, docs).
-        buildGraph().
-        buildSlider().
-        buildHoverDetail().
-        buildAxes().
-        buildLegend().
-        buildDocs(docs);
+    formatter_handle = typeof formatter_handle !== 'undefined' ? formatter_handle : '';
+
+    var formatter = new Formatter();
+
+    return new Chart(id, series_data, render_type).
+          buildGraph().
+          buildSlider().
+          buildHoverDetail(formatter.getFormatter(formatter_handle)).
+          buildAxes().
+          buildLegend().
+          buildDocs(docs);
 }
 
+
+/**
+ *
+ *  Stores different formatters for Rickshaw hover detail objects.  Useful for customizing
+ *  formatters for time-series or other types of plots.
+ *
+ */
+function Formatter() {
+
+    var formatterContext = this;
+
+    this.numberWithCommas = function (/* int */ value) {
+        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    };
+
+    this.Formatters = {
+
+        'timeseries_1': {
+
+            formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
+
+                var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
+                var dateStr = '<span class="date">' + date.toDateString() + ' ' + date.getUTCHours() + 'H' + '</span>';
+                var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+                return swatch + series.name + ": " + formatterContext.numberWithCommas(y) + '<br>' + dateStr;
+            },
+            xFormatter: function(x) {
+                var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
+                return date.toDateString()
+            }
+        },
+
+        'integer_1': {
+
+            formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
+                var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+                return swatch + series.name + ": " + formatterContext.numberWithCommas(x) + ',' + formatterContext.numberWithCommas(y);
+            },
+            xFormatter: function(x) {
+                return formatterContext.numberWithCommas(x);
+            }
+        }
+    };
+
+    this.getFormatter = function (/* string */ formatter_type) {
+
+        switch (formatter_type) {
+            case 'timeseries_1':
+                return formatterContext.Formatters.timeseries_1;
+
+            case 'integer_1':
+                return formatterContext.Formatters.integer_1;
+
+            default:
+                return formatterContext.Formatters.timeseries_1;
+        }
+    };
+
+    return this;
+}
 
 /**
  * Create chart elements based on Rickshaw library.
@@ -52,7 +119,8 @@ function chartFactory(/* int */ id,
  */
 function Chart(/* int */ id,
                /* Array */ series_data,
-               /* Array */ render_type) {
+               /* Array */ render_type
+    ) {
 
     this.id = id;
     this.series_data = series_data;
@@ -86,19 +154,11 @@ function Chart(/* int */ id,
         return this;
     };
 
-    this.buildHoverDetail = function () {
+    this.buildHoverDetail = function (/* Formatter */ formatter_def) {
         this.hoverDetail = new Rickshaw.Graph.HoverDetail( {
             graph: this.graph,
-            formatter: function(series, x, y) {
-                var numberWithCommas;
-                numberWithCommas = function (/* int */ value) {
-                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                };
-                var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
-                var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
-                return swatch + series.name + ": " + numberWithCommas(y) + '<br>' + date;
-            },
-            xFormatter: function(x) { return '' }
+            formatter: formatter_def.formatter,
+            xFormatter: formatter_def.xFormatter
         });
         return this;
     };
@@ -150,8 +210,8 @@ function Chart(/* int */ id,
         for (i = 0; i < this.series_data.length; i++) {
             for (j = 0; j < this.series_data[i].data.length; j++) {
                 out += [this.series_data[i].name,
-                    this.series_data[i].data[j].x,
-                    this.series_data[i].data[j].y].join(',') + "\n";
+                        this.series_data[i].data[j].x,
+                        this.series_data[i].data[j].y].join(':') + "\n";
             }
         }
         return out;
