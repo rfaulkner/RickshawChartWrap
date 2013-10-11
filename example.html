@@ -56,8 +56,10 @@
     }];
 
     // Build the Chart
-    var chart = chartFactory(0, series_data, 'line', "Example plot.");
-    chart.buildAnnotaton('2', "Test Annotation.");
+    var annotations = [['2', "Test Annotation."]];
+    var chart = chartFactory(0, series_data, 'line', "Example plot.", annotations);
+
+    chart.graph.render();
     document.getElementById("csv_link0").href = "#";
 
 </script>

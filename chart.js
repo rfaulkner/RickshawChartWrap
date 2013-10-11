@@ -32,6 +32,7 @@ function chartFactory(/* int */ id,
                       /* Array */ series_data,
                       /* String */ render_type,
                       /* String */ docs,
+                      /* String */ annotations,
                       /* string */ formatter_handle
     ) {
 
@@ -45,7 +46,8 @@ function chartFactory(/* int */ id,
           buildHoverDetail(formatter.getFormatter(formatter_handle)).
           buildAxes().
           buildLegend().
-          buildDocs(docs);
+          buildDocs(docs).
+          buildAnnotation(annotations);
 }
 
 
@@ -228,19 +230,23 @@ function Chart(/* int */ id,
         return this;
     };
 
-     /*
-     * Add annotation to the chart.
+    /*
+     * Add annotations to the chart.
      *
      * @param timestamp     - Timestamp of annotation.
      * @param message       - Annotation text.
      */
-    this.buildAnnotaton = function (/* int */ timestamp, /* String */ message) {
+    this.buildAnnotation = function (/* String */ annotations) {
 
         var annotator = new Rickshaw.Graph.Annotate({
             graph: this.graph,
             element: document.getElementById("timeline" + this.id)
         });
-        annotator.add(timestamp, message);
+
+        // Add annotations
+        for (var j = 0; j < annotations.length; j++) {
+            annotator.add(annotations[j][0], annotations[j][1]);
+        }
         return this;
     };
 
