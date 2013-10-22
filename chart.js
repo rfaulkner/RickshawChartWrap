@@ -18,6 +18,7 @@
 var WIDTH = 640;
 var HEIGHT = 300;
 var MILLISECONDS_PER_DAY = 3600000 * 24;
+var MILLISECONDS_PER_MINUTE = 60000;
 
 /**
  * Create chart elements based on Rickshaw library.
@@ -29,25 +30,36 @@ var MILLISECONDS_PER_DAY = 3600000 * 24;
  *
  */
 function chartFactory(/* int */ id,
-                      /* Array */ series_data,
+                      /* Array|string */ series_data,
                       /* String */ render_type,
                       /* String */ docs,
-                      /* String */ annotations,
-                      /* string */ formatter_handle
+                      /* Array */ annotations,
+                      /* string */ formatter_handle,
+                      /* boolean */ is_ajax
     ) {
 
     formatter_handle = typeof formatter_handle !== 'undefined' ? formatter_handle : '';
 
     var formatter = new Formatter();
 
-    return new Chart(id, series_data, render_type).
-          buildGraph().
-          buildSlider().
-          buildHoverDetail(formatter.getFormatter(formatter_handle)).
-          buildAxes().
-          buildLegend().
-          buildDocs(docs).
-          buildAnnotation(annotations);
+    if (is_ajax) {
+        return new Chart(id, series_data, render_type).
+            buildGraph({
+                'ajax': true,
+                'formatter_handle': formatter_handle,
+                'docs': docs,
+                'annotations': annotations
+            });
+    } else {
+        return new Chart(id, series_data, render_type).
+              buildGraph({}).
+              buildSlider().
+              buildHoverDetail(formatter.getFormatter(formatter_handle)).
+              buildAxes().
+              buildLegend().
+              buildDocs(docs).
+              buildAnnotation(annotations);
+    }
 }
 
 
@@ -112,6 +124,17 @@ function Formatter() {
 }
 
 /**
+ *  Compares numeric independent variable values for Rickshaw formatted plot.
+ */
+function compareDataSeries(a,b) {
+    if (a.x < b.x)
+        return -1;
+    if (a.x > b.x)
+        return 1;
+    return 0;
+}
+
+/**
  * Create chart elements based on Rickshaw library.
  *
  * @param id            - Chart id.
@@ -127,24 +150,71 @@ function Chart(/* int */ id,
     this.id = id;
     this.series_data = series_data;
     this.render_type = render_type;
+    this.built = false;
 
+    /**
+     *  Builds a chart object that wraps a variety of RickShaw chart features.  An Ajax
+     *  chart that updates minutely can be created by specifying 'isAjax' in args and
+     *  supplying a data URL.
+     */
     this.buildGraph = function (args) {
 
         if (args === undefined) {
             args = {};
         }
         var minVal =  args['min'] != undefined ? args.min : 0;
+        var isAjax =  args['ajax'] != undefined ? args.ajax : false;
 
-        this.graph = new Rickshaw.Graph( {
-            element: document.querySelector("#chart" + this.id),
-            width: WIDTH,
-            height: HEIGHT,
-            renderer: this.render_type,
-            preserve: true,
-            series: this.series_data,
-            min: minVal
-        } );
-        this.graph.render();
+        if (isAjax) {
+
+            var formatter = new Formatter();
+            var _this = this;
+
+            this.ajaxGraph = new Rickshaw.Graph.Ajax( {
+
+                element: document.getElementById("chart" + this.id),
+                width: WIDTH,
+                height: HEIGHT,
+                renderer: this.render_type,
+                dataURL: this.series_data,
+
+                onData: function(d) {
+                    d[0].data.sort(compareDataSeries);
+                    return d },
+
+                onComplete: function(rsThis) {
+
+                    // On the first call build the chart artifacts
+                    if (!_this.built) {
+                        _this.graph = rsThis.graph;
+                        _this.buildSlider().
+                            buildHoverDetail(formatter.getFormatter(args.formatter_handle)).
+                            buildAxes().
+                            buildLegend().
+                            buildDocs(args.docs).
+                            buildAnnotation(args.annotations);
+                        _this.built = true;
+                    }
+                    _this.graph.render();
+                }
+            } );
+
+            this.interval = setInterval( function() { _this.ajaxGraph.request(); },
+                MILLISECONDS_PER_MINUTE);
+
+        } else {
+            this.graph = new Rickshaw.Graph( {
+                element: document.querySelector("#chart" + this.id),
+                width: WIDTH,
+                height: HEIGHT,
+                renderer: this.render_type,
+                preserve: true,
+                series: this.series_data,
+                min: minVal
+            } );
+            this.graph.render();
+            this.built = true;
+        }
         return this;
     };
 
