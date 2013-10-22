@@ -322,6 +322,11 @@ function Chart(/* int */ id,
      */
     this.buildAnnotation = function (/* String */ annotations) {
 
+        // If annotations are undefined do not add
+        if (annotations == undefined) {
+            return this;
+        }
+
         var annotator = new Rickshaw.Graph.Annotate({
             graph: this.graph,
             element: document.getElementById("timeline" + this.id)
@@ -329,7 +334,11 @@ function Chart(/* int */ id,
 
         // Add annotations
         for (var j = 0; j < annotations.length; j++) {
-            annotator.add(annotations[j][0], annotations[j][1]);
+            try {
+                annotator.add(annotations[j][0], annotations[j][1]);
+            } catch (err) {
+                console.log('Failed to add annotation: ' + err.message);
+            }
         }
         return this;
     };
