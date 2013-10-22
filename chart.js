@@ -103,6 +103,17 @@ function Formatter() {
             xFormatter: function(x) {
                 return formatterContext.numberWithCommas(x);
             }
+        },
+
+        'confidence': {
+
+            formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
+                var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+                return swatch + series.name + " count: " + formatterContext.numberWithCommas(y);
+            },
+            xFormatter: function(x) {
+                return 'Confidence Level - ' + x;
+            }
         }
     };
 
@@ -114,6 +125,9 @@ function Formatter() {
 
             case 'integer_1':
                 return formatterContext.Formatters.integer_1;
+
+            case 'confidence':
+                return formatterContext.Formatters.confidence;
 
             default:
                 return formatterContext.Formatters.timeseries_1;
