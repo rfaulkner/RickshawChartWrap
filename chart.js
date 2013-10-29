@@ -17,6 +17,11 @@
 // Chart dimensions
 var WIDTH = 640;
 var HEIGHT = 300;
+
+var OVERFLOW = 10000000;
+var OVERFLOW_ERR_MSG = "Too many datapoints aborting render.";
+
+var SECONDS_PER_DAY = 3600 * 24;
 var MILLISECONDS_PER_DAY = 3600000 * 24;
 var MILLISECONDS_PER_MINUTE = 60000;
 
@@ -166,6 +171,11 @@ function Chart(/* int */ id,
     this.render_type = render_type;
     this.built = false;
 
+    if (render_type == 'bar-unstacked') {
+        this.render_type = 'bar';
+        this.unstacked = true;
+    }
+
     /**
      *  Builds a chart object that wraps a variety of RickShaw chart features.  An Ajax
      *  chart that updates minutely can be created by specifying 'isAjax' in args and
@@ -178,11 +188,18 @@ function Chart(/* int */ id,
         }
         var minVal =  args['min'] != undefined ? args.min : 0;
         var isAjax =  args['ajax'] != undefined ? args.ajax : false;
+        var y_default_value =  args['y_default_value'] != undefined ? args.ajax : 0;
+        var x_offset =  args['x_offset'] != undefined ? args.ajax : SECONDS_PER_DAY;
 
         if (isAjax) {
 
             var formatter = new Formatter();
             var _this = this;
+
+            this.syncUpdate = function() {
+                _this.ajaxGraph.request();
+                _this.setRefreshTimes();
+            };
 
             this.ajaxGraph = new Rickshaw.Graph.Ajax( {
 
@@ -193,8 +210,13 @@ function Chart(/* int */ id,
                 dataURL: this.series_data,
 
                 onData: function(d) {
-                    d[0].data.sort(compareDataSeries);
-                    return d },
+
+                    // Sort the data retrieved
+                    for (var i = 0; i < d.length; i++)
+                        d[i].data.sort(compareDataSeries);
+
+                    return d
+                },
 
                 onComplete: function(rsThis) {
 
@@ -209,12 +231,17 @@ function Chart(/* int */ id,
                             buildAnnotation(args.annotations);
                         _this.built = true;
                     }
+
+                    if (_this.unstacked != undefined)
+                        _this.graph.renderer.unstack = _this.unstacked;
+
                     _this.graph.render();
                 }
             } );
 
-            this.interval = setInterval( function() { _this.ajaxGraph.request(); },
-                MILLISECONDS_PER_MINUTE);
+            // Set the update interval and perform the initial update
+            this.interval = setInterval(_this.syncUpdate, MILLISECONDS_PER_MINUTE);
+            this.syncUpdate();
 
         } else {
             this.graph = new Rickshaw.Graph( {
@@ -226,7 +253,12 @@ function Chart(/* int */ id,
                 series: this.series_data,
                 min: minVal
             } );
+
+            if (this.unstacked != undefined)
+                this.graph.renderer.unstack = this.unstacked;
+
             this.graph.render();
+
             this.built = true;
         }
         return this;
@@ -341,6 +373,15 @@ function Chart(/* int */ id,
             }
         }
         return this;
+    };
+
+    /*
+     * Create a CSV from the series data.
+     */
+    this.setRefreshTimes = function () {
+        var next = (new Date((new Date).getTime() + MILLISECONDS_PER_MINUTE)).toUTCString();
+        document.getElementById("refresh_date" + this.id).innerHTML = "<b>Refreshed on:</b>" + (new Date).toUTCString();
+        document.getElementById("next_date" + this.id).innerHTML = "<b>Next refresh:</b>" + next;
     };
 
     return this;
