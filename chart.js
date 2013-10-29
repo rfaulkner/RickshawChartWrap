@@ -211,9 +211,53 @@ function Chart(/* int */ id,
 
                 onData: function(d) {
 
+                    var min_x = d[0].data[0].x;
+                    var max_x = d[0].data[0].x;
+                    var i;
+
+
                     // Sort the data retrieved
-                    for (var i = 0; i < d.length; i++)
+                    for (i = 0; i < d.length; i++) {
                         d[i].data.sort(compareDataSeries);
+
+                        // Check for the minimum x-value
+                        if (d[i].data[0].x < min_x)
+                            min_x = d[i].data[0].x;
+
+                        // Check for the maximum x-value
+                        if (d[i].data[d[i].data.length - 1].x > max_x)
+                            max_x = d[i].data[d[i].data.length - 1].x;
+
+                    }
+
+                    // Pad the series to ensure that they're all the same length
+                    for (i = 0; i < d.length; i++) {
+
+                        // Prepend
+                        while (d[i].data[0].x > min_x) {
+
+                            d[i].data.unshift(
+                                {
+                                    x: d[i].data[0].x - x_offset,
+                                    y: y_default_value
+                                }
+                            );
+                        }
+
+                        // Append
+                        while (d[i].data[d[i].data.length - 1].x < max_x) {
+                            d[i].data.push(
+                                {
+                                    x: d[i].data[d[i].data.length - 1].x + x_offset,
+                                    y: y_default_value
+                                });
+                            console.log('new max - ' + d[i].data[d[i].data.length - 1].x);
+                        }
+
+                        // Limit the number of datapoints in a chart (10M)
+                        if (d[i].data.length > OVERFLOW)
+                            throw OVERFLOW_ERR_MSG;
+                    }
 
                     return d
                 },
