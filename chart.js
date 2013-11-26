@@ -166,6 +166,8 @@ function Chart(/* int */ id,
                /* Array */ render_type
     ) {
 
+    var chartContext = this;
+
     this.id = id;
     this.series_data = series_data;
     this.render_type = render_type;
@@ -283,6 +285,9 @@ function Chart(/* int */ id,
                 }
             } );
 
+            // Set the resolution controls
+            this.setResolutionCheckControls(new Array("daily", "hourly"));
+
             // Set the update interval and perform the initial update
             this.interval = setInterval(_this.syncUpdate, MILLISECONDS_PER_MINUTE);
             this.syncUpdate();
@@ -298,6 +303,7 @@ function Chart(/* int */ id,
                 min: minVal
             } );
 
+            // Set the resolution controls
             this.setResolutionCheckControls(new Array("daily", "hourly"));
 
             if (this.unstacked != undefined)
@@ -438,7 +444,8 @@ function Chart(/* int */ id,
         this.resolutionChecks = check_ids;
         for (var i = 0; i < this.resolutionChecks.length; i++) {
             document.getElementById(this.resolutionChecks[i] + this.id).onclick = function() {
-                // on click bahaviour
+                // default selection behaviour
+                console.log('checked');
             };
         }
     };
