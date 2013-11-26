@@ -298,6 +298,8 @@ function Chart(/* int */ id,
                 min: minVal
             } );
 
+            this.setResolutionCheckControls(new Array("daily", "hourly"));
+
             if (this.unstacked != undefined)
                 this.graph.renderer.unstack = this.unstacked;
 
@@ -426,6 +428,19 @@ function Chart(/* int */ id,
         var next = (new Date((new Date).getTime() + MILLISECONDS_PER_MINUTE)).toUTCString();
         document.getElementById("refresh_date" + this.id).innerHTML = "<b>Refreshed on:</b>" + (new Date).toUTCString();
         document.getElementById("next_date" + this.id).innerHTML = "<b>Next refresh:</b>" + next;
+    };
+
+    /*
+     * Create a CSV from the series data.
+     */
+    this.setResolutionCheckControls = function(/* array */ check_ids) {
+
+        this.resolutionChecks = check_ids;
+        for (var i = 0; i < this.resolutionChecks.length; i++) {
+            document.getElementById(this.resolutionChecks[i] + this.id).onclick = function() {
+                // on click bahaviour
+            };
+        }
     };
 
     return this;
