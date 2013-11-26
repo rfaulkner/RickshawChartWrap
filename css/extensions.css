@@ -109,3 +109,6 @@ section {
 label.disabled {
     opacity: 0.4;
 }
+.cb-row {margin: 10px;clear:both;overflow:hidden;}
+.cb-row label {float:left;}
+.cb-row input {float:right;}
