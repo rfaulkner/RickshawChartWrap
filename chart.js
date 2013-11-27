@@ -159,6 +159,41 @@ function compareDataSeries(a,b) {
 }
 
 /**
+ *  Re-slices the data depending on desired resolution. O(n).
+ */
+function recomputeDataByTime(data, resolution) {
+
+    var new_time;
+    var new_data = {};
+    var i;
+
+    // Compute hash with new {timestamp: count} values
+    for (i = 0; i < data.length; i++) {
+
+        if (resolution == RESOLUTION_DAILY) {
+            new_time = parseInt(data[i].x / SECONDS_PER_DAY) * SECONDS_PER_DAY;
+        } else if (resolution == RESOLUTION_HOURLY) {
+            new_time = parseInt(data[i].x / SECONDS_PER_HOUR) * SECONDS_PER_HOUR;
+        }
+
+        if (!new_data.hasOwnProperty(new_time.toString())) {
+            new_data[new_time.toString()] = data[i].y;
+        } else {
+            new_data[new_time.toString()] += data[i].y;
+        }
+    }
+
+    data = [];
+    for (var key in new_data) {
+        if (new_data.hasOwnProperty(key)) {
+            data.push({x: parseInt(key), y: new_data[key]});
+        }
+    }
+
+    return data;
+}
+
+/**
  * Create chart elements based on Rickshaw library.
  *
  * @param id            - Chart id.
@@ -170,8 +205,6 @@ function Chart(/* int */ id,
                /* Array */ series_data,
                /* Array */ render_type
     ) {
-
-    var chartContext = this;
 
     this.id = id;
     this.series_data = series_data;
@@ -196,12 +229,10 @@ function Chart(/* int */ id,
         }
 
         var _this = this;
-
         var minVal =  args['min'] != undefined ? args.min : 0;
         var isAjax =  args['ajax'] != undefined ? args.ajax : false;
         var y_default_value =  args['y_default_value'] != undefined ? args.ajax : 0;
         var x_offset =  args['x_offset'] != undefined ? args.ajax : SECONDS_PER_DAY;
-        this.resolution = RESOLUTION_DAILY;
 
         if (isAjax) {
 
@@ -226,6 +257,10 @@ function Chart(/* int */ id,
                     var max_x = d[0].data[0].x;
                     var i;
 
+                    // Handle data granularity
+                    for (i = 0; i < d.length; i++) {
+                        d[i].data = recomputeDataByTime(d[i].data, _this.resolution);
+                    }
 
                     // Sort the data retrieved
                     for (i = 0; i < d.length; i++) {
@@ -255,14 +290,13 @@ function Chart(/* int */ id,
                             );
                         }
 
-                        // Append
+                        // Append default values
                         while (d[i].data[d[i].data.length - 1].x < max_x) {
                             d[i].data.push(
                                 {
                                     x: d[i].data[d[i].data.length - 1].x + x_offset,
                                     y: y_default_value
                                 });
-                            console.log('new max - ' + d[i].data[d[i].data.length - 1].x);
                         }
 
                         // Limit the number of datapoints in a chart (10M)
@@ -270,7 +304,7 @@ function Chart(/* int */ id,
                             throw OVERFLOW_ERR_MSG;
                     }
 
-                    return d
+                    return d;
                 },
 
                 onComplete: function(rsThis) {
@@ -302,6 +336,7 @@ function Chart(/* int */ id,
             this.syncUpdate();
 
         } else {
+
             this.graph = new Rickshaw.Graph( {
                 element: document.querySelector("#chart" + this.id),
                 width: WIDTH,
@@ -312,14 +347,10 @@ function Chart(/* int */ id,
                 min: minVal
             } );
 
-            // Set the resolution controls
-            this.setResolutionCheckControls(new Array("daily", "hourly"));
-
             if (this.unstacked != undefined)
                 this.graph.renderer.unstack = this.unstacked;
 
             this.graph.render();
-
             this.built = true;
         }
         return this;
