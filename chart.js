@@ -21,9 +21,14 @@ var HEIGHT = 300;
 var OVERFLOW = 10000000;
 var OVERFLOW_ERR_MSG = "Too many datapoints aborting render.";
 
+var SECONDS_PER_HOUR = 3600;
 var SECONDS_PER_DAY = 3600 * 24;
+
 var MILLISECONDS_PER_DAY = 3600000 * 24;
 var MILLISECONDS_PER_MINUTE = 60000;
+
+var RESOLUTION_HOURLY = 0;
+var RESOLUTION_DAILY = 1;
 
 /**
  * Create chart elements based on Rickshaw library.
@@ -172,6 +177,7 @@ function Chart(/* int */ id,
     this.series_data = series_data;
     this.render_type = render_type;
     this.built = false;
+    this.resolution = RESOLUTION_DAILY;
 
     if (render_type == 'bar-unstacked') {
         this.render_type = 'bar';
@@ -188,15 +194,18 @@ function Chart(/* int */ id,
         if (args === undefined) {
             args = {};
         }
+
+        var _this = this;
+
         var minVal =  args['min'] != undefined ? args.min : 0;
         var isAjax =  args['ajax'] != undefined ? args.ajax : false;
         var y_default_value =  args['y_default_value'] != undefined ? args.ajax : 0;
         var x_offset =  args['x_offset'] != undefined ? args.ajax : SECONDS_PER_DAY;
+        this.resolution = RESOLUTION_DAILY;
 
         if (isAjax) {
 
             var formatter = new Formatter();
-            var _this = this;
 
             this.syncUpdate = function() {
                 _this.ajaxGraph.request();
@@ -439,13 +448,34 @@ function Chart(/* int */ id,
     /*
      * Create a CSV from the series data.
      */
-    this.setResolutionCheckControls = function(/* array */ check_ids) {
+    this.setResolutionCheckControls = function(/* Array */ check_ids) {
 
+        var _this = this;
         this.resolutionChecks = check_ids;
+
         for (var i = 0; i < this.resolutionChecks.length; i++) {
-            document.getElementById(this.resolutionChecks[i] + this.id).onclick = function() {
+
+            document.getElementById(this.resolutionChecks[i] + this.id).onclick = function(event) {
+
                 // default selection behaviour
-                console.log('checked');
+                switch (event.target.value)
+                {
+                    case "daily":
+                        if (_this.resolution != RESOLUTION_DAILY) {
+                            _this.resolution = RESOLUTION_DAILY;
+                            _this.syncUpdate();
+                            _this.graph.render();
+                        }
+                        break;
+
+                    case "hourly":
+                        if (_this.resolution != RESOLUTION_HOURLY) {
+                            _this.resolution = RESOLUTION_HOURLY;
+                            _this.syncUpdate();
+                            _this.graph.render();
+                        }
+                        break;
+                }
             };
         }
     };
