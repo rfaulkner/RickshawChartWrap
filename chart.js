@@ -511,5 +511,52 @@ function Chart(/* int */ id,
         }
     };
 
+        /*
+     *  Reconstructs the url from `dataItems`
+     */
+    this.constructDataUrl = function() {
+
+        var ids = [];
+        var names = [];
+        var colors = [];
+
+        // Unpack ids, names, and colors
+        for (var key in this.dataItems) {
+            if (this.dataItems.hasOwnProperty(key)) {
+                if (this.dataItems[key].active) {
+                    names.push(key);
+                    ids.push(this.dataItems[key].id);
+                    colors.push(this.dataItems[key].color);
+                }
+            }
+        }
+        this.ajaxGraph.dataURL = 'stats_chart_data_response.gne?ids=' + ids.join(',') +
+            '&names=' + names.join(',') + '&colors=' + colors.join(',');
+    };
+
+    /*
+     *  Adds a new metric
+     */
+    this.addDataItem = function(
+        /* integer */ id,
+        /* string */ name,
+        /* string */ color) {
+
+        this.dataItems[name] = {
+            'active': false,
+            'id': id,
+            'color': color
+        };
+    };
+
+    /*
+     *  Deactivates or activates the metric
+     */
+    this.toggleDataItemActive = function(/* string */ key) {
+        if (this.dataItems.hasOwnProperty(key)) {
+            this.dataItems[key].active = !this.dataItems[key].active;
+        }
+    };
+
     return this;
 }
