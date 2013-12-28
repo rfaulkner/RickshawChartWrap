@@ -564,5 +564,12 @@ function Chart(/* int */ id,
         }
     };
 
+    /*
+     *  Is the data item active?
+     */
+    this.isActiveItem = function(/* string */ key) {
+        return this.dataItems[key].active;
+    };
+
     return this;
 }
