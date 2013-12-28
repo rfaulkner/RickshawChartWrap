@@ -212,6 +212,9 @@ function Chart(/* int */ id,
     this.built = false;
     this.resolution = RESOLUTION_DAILY;
 
+    this.dataItems = {};
+    this.newItems = [];
+
     if (render_type == 'bar-unstacked') {
         this.render_type = 'bar';
         this.unstacked = true;
@@ -517,7 +520,7 @@ function Chart(/* int */ id,
         }
     };
 
-        /*
+    /*
      *  Reconstructs the url from `dataItems`
      */
     this.constructDataUrl = function() {
@@ -538,21 +541,23 @@ function Chart(/* int */ id,
         }
         this.ajaxGraph.dataURL = 'stats_chart_data_response.gne?ids=' + ids.join(',') +
             '&names=' + names.join(',') + '&colors=' + colors.join(',');
+        console.log('new url ' + this.ajaxGraph.dataURL);
+        return this;
     };
 
     /*
      *  Adds a new metric
      */
     this.addDataItem = function(
-        /* integer */ id,
+        /* string */ id,
         /* string */ name,
         /* string */ color) {
-
         this.dataItems[name] = {
             'active': false,
             'id': id,
             'color': color
         };
+        return this;
     };
 
     /*
@@ -561,7 +566,11 @@ function Chart(/* int */ id,
     this.toggleDataItemActive = function(/* string */ key) {
         if (this.dataItems.hasOwnProperty(key)) {
             this.dataItems[key].active = !this.dataItems[key].active;
+
+            if (this.dataItems[key].active)
+                this.newItems.push(key);
         }
+        return this;
     };
 
     /*
