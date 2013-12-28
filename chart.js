@@ -486,28 +486,34 @@ function Chart(/* int */ id,
 
         for (var i = 0; i < this.resolutionChecks.length; i++) {
 
-            document.getElementById(this.resolutionChecks[i] + this.id).onclick = function(event) {
+            try {
+                document.getElementById(this.resolutionChecks[i] + this.id).onclick = function(event) {
 
-                // default selection behaviour
-                switch (event.target.value)
-                {
-                    case "daily":
-                        if (_this.resolution != RESOLUTION_DAILY) {
-                            _this.resolution = RESOLUTION_DAILY;
-                            _this.syncUpdate();
-                            _this.graph.render();
-                        }
-                        break;
+                    // default selection behaviour
+                    switch (event.target.value)
+                    {
+                        case "daily":
+                            if (_this.resolution != RESOLUTION_DAILY) {
+                                _this.resolution = RESOLUTION_DAILY;
+                                _this.syncUpdate();
+                                _this.graph.render();
+                            }
+                            break;
 
-                    case "hourly":
-                        if (_this.resolution != RESOLUTION_HOURLY) {
-                            _this.resolution = RESOLUTION_HOURLY;
-                            _this.syncUpdate();
-                            _this.graph.render();
-                        }
-                        break;
-                }
-            };
+                        case "hourly":
+                            if (_this.resolution != RESOLUTION_HOURLY) {
+                                _this.resolution = RESOLUTION_HOURLY;
+                                _this.syncUpdate();
+                                _this.graph.render();
+                            }
+                            break;
+                    }
+                };
+            } catch (err) {
+                // Normal behaviour if the section containing the "resolution" controls is missing
+                console.log('Ignoring resolution section for chart \'' + this.id + '\'.');
+                break;
+            }
         }
     };
 
