@@ -23,12 +23,12 @@ var OVERFLOW_ERR_MSG = "Too many datapoints aborting render.";
 
 var SECONDS_PER_HOUR = 3600;
 var SECONDS_PER_DAY = 3600 * 24;
-
 var MILLISECONDS_PER_DAY = 3600000 * 24;
 var MILLISECONDS_PER_MINUTE = 60000;
 
 var RESOLUTION_HOURLY = 0;
 var RESOLUTION_DAILY = 1;
+
 
 /**
  * Create chart elements based on Rickshaw library.
@@ -39,7 +39,7 @@ var RESOLUTION_DAILY = 1;
  * @param docs          - comments for this chart.
  *
  */
-function chartFactory(/* int */ id,
+function chartFactory(/* string */ id,
                       /* Array|string */ series_data,
                       /* String */ render_type,
                       /* String */ docs,
@@ -201,7 +201,7 @@ function recomputeDataByTime(data, resolution) {
  * @param render_type   - Rickshaw render type of the plot.
  *
  */
-function Chart(/* int */ id,
+function Chart(/* String */ id,
                /* Array */ series_data,
                /* Array */ render_type
     ) {
@@ -237,6 +237,8 @@ function Chart(/* int */ id,
         var y_default_value =  args['y_default_value'] != undefined ? args.ajax : 0;
         var x_offset =  args['x_offset'] != undefined ? args.ajax : SECONDS_PER_DAY;
 
+        this.args = args;
+
         if (isAjax) {
 
             var formatter = new Formatter();
@@ -255,6 +257,22 @@ function Chart(/* int */ id,
                 dataURL: this.series_data,
 
                 onData: function(d) {
+
+                    // Check for new series
+                    if (_this.ajaxGraph.graph != undefined) {
+                        for (var idx = 0; idx < d.length; idx++) {
+                            if (_this.newItems.indexOf(d[idx].name) > -1) {
+                                console.log('Adding series \'' + d[idx].name + '\'.');
+                                _this.ajaxGraph.graph.series.push(d[idx]);
+                                _this.newItems.splice(_this.newItems.indexOf(d[idx].name),1);
+                            }
+                        }
+                        while (_this.newItems.length > 0) {
+                            console.log('Can\'t find series \'' + _this.newItems[-1] + '\'.');
+                            _this.newItems.pop();
+                        }
+                        _this.ajaxGraph.graph.update();
+                    }
 
                     var min_x = d[0].data[0].x;
                     var max_x = d[0].data[0].x;
