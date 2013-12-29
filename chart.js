@@ -104,7 +104,7 @@ function Formatter() {
             },
             xFormatter: function(x) {
                 var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
-                return date.toDateString()
+                return date.toDateString();
             }
         },
 
@@ -127,6 +127,25 @@ function Formatter() {
             },
             xFormatter: function(x) {
                 return 'Confidence Level - ' + x;
+            }
+        },
+
+        'dynamic_docs_1': {
+
+            formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
+
+                var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
+                var dateStr = '<span class="date">' + date.toDateString() + ' ' + date.getUTCHours() + 'H' + '</span>';
+                var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+
+                // Set the docstring
+                document.getElementById('chart_docs').innerHTML = chart_docs[series.name];
+
+                return swatch + series.name + ": " + formatterContext.numberWithCommas(y) + '<br>' + dateStr;
+            },
+            xFormatter: function(x) {
+                var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
+                return date.toDateString();
             }
         }
     };
