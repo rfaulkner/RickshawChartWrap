@@ -213,7 +213,9 @@ function Chart(/* String */ id,
     this.resolution = RESOLUTION_DAILY;
 
     this.dataItems = {};
-    this.newItems = [];
+
+    this.activateItem = null;
+    this.deactivateItem = null;
 
     if (render_type == 'bar-unstacked') {
         this.render_type = 'bar';
@@ -258,18 +260,33 @@ function Chart(/* String */ id,
 
                 onData: function(d) {
 
-                    // Check for new series
+                    // Manage any changes to the graph series
                     if (_this.ajaxGraph.graph != undefined) {
-                        for (var idx = 0; idx < d.length; idx++) {
-                            if (_this.newItems.indexOf(d[idx].name) > -1) {
-                                console.log('Adding series \'' + d[idx].name + '\'.');
-                                _this.ajaxGraph.graph.series.push(d[idx]);
-                                _this.newItems.splice(_this.newItems.indexOf(d[idx].name),1);
+                        if (_this.deactivateItem) {     // Check for removed series
+                            for (var idx = 0; idx < _this.ajaxGraph.graph.series.length; idx++) {
+                                // console.log('deact ' + d[idx]);
+                                if (_this.deactivateItem == _this.ajaxGraph.graph.series[idx].name) {
+                                    console.log('Removing series \'' + _this.ajaxGraph.graph.series[idx].name + '\'.');
+                                    delete _this.ajaxGraph.graph.series[idx];
+                                    _this.ajaxGraph.graph.series.splice(idx, 1);
+                                    _this.deactivateItem = null;
+                                    break;
+                                }
                             }
-                        }
-                        while (_this.newItems.length > 0) {
-                            console.log('Can\'t find series \'' + _this.newItems[-1] + '\'.');
-                            _this.newItems.pop();
+                            if (_this.deactivateItem)
+                                console.log('Error could not deactivate series \'' + _this.deactivateItem + '\'');
+
+                        } else if (_this.activateItem) {    // Check for newly added series
+                            for (idx = 0; idx < d.length; idx++) {
+                                if (_this.activateItem == d[idx].name) {
+                                    console.log('Adding series \'' + d[idx].name + '\'.');
+                                    _this.ajaxGraph.graph.series.push(d[idx]);
+                                    _this.activateItem = null;
+                                    break;
+                                }
+                            }
+                            if (_this.deactivateItem)
+                                console.log('Error could not activate series \'' + _this.deactivateItem + '\'');
                         }
                         _this.ajaxGraph.graph.update();
                     }
@@ -559,7 +576,6 @@ function Chart(/* String */ id,
         }
         this.ajaxGraph.dataURL = 'stats_chart_data_response.gne?ids=' + ids.join(',') +
             '&names=' + names.join(',') + '&colors=' + colors.join(',');
-        console.log('new url ' + this.ajaxGraph.dataURL);
         return this;
     };
 
@@ -586,7 +602,12 @@ function Chart(/* String */ id,
             this.dataItems[key].active = !this.dataItems[key].active;
 
             if (this.dataItems[key].active)
-                this.newItems.push(key);
+                this.activateItem = key;
+            else
+                this.deactivateItem = key;
+
+            // Re-render the graph
+            this.constructDataUrl().syncUpdate();
         }
         return this;
     };
