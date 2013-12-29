@@ -45,7 +45,9 @@ function chartFactory(/* string */ id,
                       /* String */ docs,
                       /* Array */ annotations,
                       /* string */ formatter_handle,
-                      /* boolean */ is_ajax
+                      /* boolean */ is_ajax,
+                      /* integer */ width,
+                      /* integer */ height
     ) {
 
     formatter_handle = typeof formatter_handle !== 'undefined' ? formatter_handle : '';
@@ -55,6 +57,8 @@ function chartFactory(/* string */ id,
     if (is_ajax) {
         return new Chart(id, series_data, render_type).
             buildGraph({
+                'width': width,
+                'height': height,
                 'ajax': true,
                 'formatter_handle': formatter_handle,
                 'docs': docs,
@@ -62,7 +66,7 @@ function chartFactory(/* string */ id,
             });
     } else {
         return new Chart(id, series_data, render_type).
-              buildGraph({}).
+              buildGraph({'width': width, 'height': height}).
               buildSlider().
               buildHoverDetail(formatter.getFormatter(formatter_handle)).
               buildAxes().
@@ -234,6 +238,8 @@ function Chart(/* String */ id,
         }
 
         var _this = this;
+        var w =  args['width'] != undefined ? args.width : WIDTH;
+        var h =  args['height'] != undefined ? args.height : HEIGHT;
         var minVal =  args['min'] != undefined ? args.min : 0;
         var isAjax =  args['ajax'] != undefined ? args.ajax : false;
         var y_default_value =  args['y_default_value'] != undefined ? args.ajax : 0;
@@ -253,8 +259,8 @@ function Chart(/* String */ id,
             this.ajaxGraph = new Rickshaw.Graph.Ajax( {
 
                 element: document.getElementById("chart" + this.id),
-                width: WIDTH,
-                height: HEIGHT,
+                width: w,
+                height: h,
                 renderer: this.render_type,
                 dataURL: this.series_data,
 
@@ -378,8 +384,8 @@ function Chart(/* String */ id,
 
             this.graph = new Rickshaw.Graph( {
                 element: document.querySelector("#chart" + this.id),
-                width: WIDTH,
-                height: HEIGHT,
+                width: w,
+                height: h,
                 renderer: this.render_type,
                 preserve: true,
                 series: this.series_data,
