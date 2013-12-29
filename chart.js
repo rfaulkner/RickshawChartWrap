@@ -261,7 +261,7 @@ function Chart(/* String */ id,
                 onData: function(d) {
 
                     // Manage any changes to the graph series
-                    if (_this.ajaxGraph.graph != undefined) {
+                    if (_this.ajaxGraph.graph != undefined && (_this.deactivateItem || _this.activateItem)) {
                         if (_this.deactivateItem) {     // Check for removed series
                             for (var idx = 0; idx < _this.ajaxGraph.graph.series.length; idx++) {
                                 // console.log('deact ' + d[idx]);
@@ -288,7 +288,8 @@ function Chart(/* String */ id,
                             if (_this.deactivateItem)
                                 console.log('Error could not activate series \'' + _this.deactivateItem + '\'');
                         }
-                        _this.ajaxGraph.graph.update();
+                        $('#legend').empty();
+                        _this.buildLegend();
                     }
 
                     var min_x = d[0].data[0].x;
