@@ -29,6 +29,9 @@ var MILLISECONDS_PER_MINUTE = 60000;
 var RESOLUTION_HOURLY = 0;
 var RESOLUTION_DAILY = 1;
 
+// Variable for global chart documentation of series
+var gl_chart_docs;
+
 
 /**
  * Create chart elements based on Rickshaw library.
@@ -53,6 +56,7 @@ function chartFactory(/* string */ id,
     formatter_handle = typeof formatter_handle !== 'undefined' ? formatter_handle : '';
 
     var formatter = new Formatter();
+    gl_chart_docs = docs;
 
     if (is_ajax) {
         return new Chart(id, series_data, render_type).
@@ -139,7 +143,7 @@ function Formatter() {
                 var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
 
                 // Set the docstring
-                document.getElementById('chart_docs').innerHTML = chart_docs[series.name];
+                document.getElementById('chart_docs').innerHTML = gl_chart_docs[series.name];
 
                 return swatch + series.name + ": " + formatterContext.numberWithCommas(y) + '<br>' + dateStr;
             },
@@ -161,6 +165,9 @@ function Formatter() {
 
             case 'confidence':
                 return formatterContext.Formatters.confidence;
+
+            case 'dynamic_docs_1':
+                return formatterContext.Formatters.dynamic_docs_1;
 
             default:
                 return formatterContext.Formatters.timeseries_1;
@@ -268,6 +275,7 @@ function Chart(/* String */ id,
 
         if (isAjax) {
 
+            Formatter.bind(this);
             var formatter = new Formatter();
 
             this.syncUpdate = function() {
@@ -496,9 +504,13 @@ function Chart(/* String */ id,
      *
      * @param text   - The documentation content.
      */
-    this.buildDocs = function (/* String */ text) {
-        this.docs =  text != undefined ? text : '_';
-        document.getElementById("chart_docs" + this.id).innerHTML = this.docs;
+    this.buildDocs = function (/* String | Array */ doc) {
+        this.docs =  doc != undefined ? doc : '_';
+
+        if (doc instanceof Array)
+            document.getElementById("chart_docs" + this.id).innerHTML = '';
+        else
+            document.getElementById("chart_docs" + this.id).innerHTML = this.docs;
         return this;
     };
 
