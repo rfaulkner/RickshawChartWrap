@@ -184,6 +184,9 @@ function Formatter() {
             case 'timeseries_1':
                 return formatterContext.Formatters.timeseries_1;
 
+            case 'timeseries_2':
+                return formatterContext.Formatters.timeseries_2;
+
             case 'integer_1':
                 return formatterContext.Formatters.integer_1;
 
