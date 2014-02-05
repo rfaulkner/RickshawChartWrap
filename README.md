@@ -6,7 +6,8 @@ Library for writing basic time-series charts with Rickshaw [1] based on d3.js wi
 
 [1] https://github.com/shutterstock/rickshaw
 
-To use the chart wrapper with an AJAX chart object:
+To use the chart wrapper with an AJAX chart object the following script will render a chart constructed by the
+chart factory method in chart.js:
 
     <div id="content">
 
@@ -90,6 +91,21 @@ The response from should look something like:
     "y":249244},{"x":1390521600,"y":252190},{"x":1390608000,"y":309104},{"x":1390694400,"y":363013},{"x":1390780800,
     "y":310749},{"x":1390867200,"y":300900},{"x":1390953600,"y":288759}],"name":"success","color":"#112881"}]
 
+
+Features
+--------
+
+**Time Resolution**
+
+The chart wrapper lets you set time series resolutions that bucket data points in time intervals.  The chart object
+sums all of the 'y' values that fall in a given bucket.  Time resolutions may be set by passing a code to the
+chartFactory method in chart.js.  The code can be found in RS_CHART_CONSTANTS in chart.js.
+
+**Hover Detail Formatters**
+
+The hover detail on the chart can be controlled by specifying a formatter in the chart factory.  Currently, the formatter
+types include 'timeseries_1', 'timeseries_2', 'integer_1', 'confidence', 'dynamic_docs_1'.  One of these types can be passed
+to *chartFactory* via the *formatter_handle* parameter.
 
 
 Example
