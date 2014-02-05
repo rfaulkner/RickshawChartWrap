@@ -7,7 +7,9 @@
  * Date:       2013-06-10
  * File:       chart.js
  *
- * Defines the chart object for ydash.
+ * Defines the chart object that eases the use of Rickshaw [1] charts.
+ *
+ * [1] https://github.com/shutterstock/rickshaw
  *
  */
 
@@ -15,19 +17,20 @@
 "use strict";
 
 // Chart dimensions
-var WIDTH = 640;
-var HEIGHT = 300;
-
-var OVERFLOW = 10000000;
-var OVERFLOW_ERR_MSG = "Too many datapoints aborting render.";
-
-var SECONDS_PER_HOUR = 3600;
-var SECONDS_PER_DAY = 3600 * 24;
-var MILLISECONDS_PER_DAY = 3600000 * 24;
-var MILLISECONDS_PER_MINUTE = 60000;
-
-var RESOLUTION_HOURLY = 0;
-var RESOLUTION_DAILY = 1;
+var RS_CHART_CONSTANTS = {
+    default_width: 640,
+    default_height: 300,
+    overflow: 10000000,
+    overflow_err_msg: "Too many datapoints aborting render.",
+    seconds_per_hour: 3600,
+    seconds_per_day: 3600 * 24,
+    seconds_per_minute: 3600000 * 24,
+    milliseconds_per_day: 3600000 * 24,
+    milliseconds_per_minute: 60000,
+    resolution_none: 'res_default',
+    resolution_hourly: 'res_hourly',
+    resolution_daily: 'res_daily'
+};
 
 // Variable for global chart documentation of series
 var gl_chart_docs;
@@ -40,6 +43,12 @@ var gl_chart_docs;
  * @param series_data   - [{data: [{x: <x>, y: <y>},+] color: <color>, name: <name>},+]
  * @param render_type   - Rickshaw render type of the plot.
  * @param docs          - comments for this chart.
+ * @param annotations   - array of chart annotation.
+ * @param formatter_handle  - formatter to use for hover detail (see Formatter).
+ * @param is_ajax       - flag indicating if the data is sourced via ajax.
+ * @param width         - chart width.
+ * @param height        - chart height.
+ * @param resolution    - time resolution for the chart.
  *
  */
 function chartFactory(/* string */ id,
@@ -50,7 +59,8 @@ function chartFactory(/* string */ id,
                       /* string */ formatter_handle,
                       /* boolean */ is_ajax,
                       /* integer */ width,
-                      /* integer */ height
+                      /* integer */ height,
+                      /* integer */ resolution
     ) {
 
     formatter_handle = typeof formatter_handle !== 'undefined' ? formatter_handle : '';
@@ -59,7 +69,7 @@ function chartFactory(/* string */ id,
     gl_chart_docs = docs;
 
     if (is_ajax) {
-        return new Chart(id, series_data, render_type).
+        return new Chart(id, series_data, render_type, resolution).
             buildGraph({
                 'width': width,
                 'height': height,
@@ -69,17 +79,16 @@ function chartFactory(/* string */ id,
                 'annotations': annotations
             });
     } else {
-        return new Chart(id, series_data, render_type).
-              buildGraph({'width': width, 'height': height}).
-              buildSlider().
-              buildHoverDetail(formatter.getFormatter(formatter_handle)).
-              buildAxes().
-              buildLegend().
-              buildDocs(docs).
-              buildAnnotation(annotations);
+        return new Chart(id, series_data, render_type, resolution).
+            buildGraph({'width': width, 'height': height}).
+            buildSlider().
+            buildHoverDetail(formatter.getFormatter(formatter_handle)).
+            buildAxes().
+            buildLegend().
+            buildDocs(docs).
+            buildAnnotation(annotations);
     }
 }
-
 
 /**
  *
@@ -101,14 +110,29 @@ function Formatter() {
 
             formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
 
-                var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
+                var date = new Date(x * 1000 + RS_CHART_CONSTANTS.milliseconds_per_day);
                 var dateStr = '<span class="date">' + date.toDateString() + ' ' + date.getUTCHours() + 'H' + '</span>';
                 var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
                 return swatch + series.name + ": " + formatterContext.numberWithCommas(y) + '<br>' + dateStr;
             },
             xFormatter: function(x) {
-                var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
+                var date = new Date(x * 1000 + RS_CHART_CONSTANTS.milliseconds_per_day);
                 return date.toDateString();
+            }
+        },
+
+        'timeseries_2': {
+
+            formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
+
+                var date = new Date(x * 1000 + RS_CHART_CONSTANTS.milliseconds_per_day);
+                var dateStr = '<span class="date">' + date.toDateString() + ' ' + date.getUTCHours() + ':' + date.getUTCMinutes() + '</span>';
+                var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+                return swatch + series.name + ": " + formatterContext.numberWithCommas(y) + '<br>' + dateStr;
+            },
+            xFormatter: function(x) {
+                var date = new Date(x * 1000 + RS_CHART_CONSTANTS.milliseconds_per_day);
+                return date.toUTCString();
             }
         },
 
@@ -138,7 +162,7 @@ function Formatter() {
 
             formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
 
-                var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
+                var date = new Date(x * 1000 + RS_CHART_CONSTANTS.milliseconds_per_day);
                 var dateStr = '<span class="date">' + date.toDateString() + ' ' + date.getUTCHours() + 'H' + '</span>';
                 var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
 
@@ -148,7 +172,7 @@ function Formatter() {
                 return swatch + series.name + ": " + formatterContext.numberWithCommas(y) + '<br>' + dateStr;
             },
             xFormatter: function(x) {
-                var date = new Date(x * 1000 + MILLISECONDS_PER_DAY);
+                var date = new Date(x * 1000 + RS_CHART_CONSTANTS.milliseconds_per_day);
                 return date.toDateString();
             }
         }
@@ -197,13 +221,17 @@ function recomputeDataByTime(data, resolution) {
     var new_data = {};
     var i;
 
+    if (resolution == RS_CHART_CONSTANTS.resolution_none) {
+        return data;
+    }
+
     // Compute hash with new {timestamp: count} values
     for (i = 0; i < data.length; i++) {
 
-        if (resolution == RESOLUTION_DAILY) {
-            new_time = parseInt(data[i].x / SECONDS_PER_DAY) * SECONDS_PER_DAY;
-        } else if (resolution == RESOLUTION_HOURLY) {
-            new_time = parseInt(data[i].x / SECONDS_PER_HOUR) * SECONDS_PER_HOUR;
+        if (resolution == RS_CHART_CONSTANTS.resolution_daily) {
+            new_time = parseInt(data[i].x / RS_CHART_CONSTANTS.seconds_per_day) * RS_CHART_CONSTANTS.seconds_per_day;
+        } else if (resolution == RS_CHART_CONSTANTS.resolution_hourly) {
+            new_time = parseInt(data[i].x / RS_CHART_CONSTANTS.seconds_per_hour) * RS_CHART_CONSTANTS.seconds_per_hour;
         }
 
         if (!new_data.hasOwnProperty(new_time.toString())) {
@@ -229,18 +257,22 @@ function recomputeDataByTime(data, resolution) {
  * @param id            - Chart id.
  * @param series_data   - [{data: [{x: <x>, y: <y>},+] color: <color>, name: <name>},+]
  * @param render_type   - Rickshaw render type of the plot.
+ * @param resolution    - Resolution of time series data.
  *
  */
 function Chart(/* String */ id,
                /* Array */ series_data,
-               /* Array */ render_type
+               /* Array */ render_type,
+               /* integer */ resolution
     ) {
 
     this.id = id;
     this.series_data = series_data;
     this.render_type = render_type;
     this.built = false;
-    this.resolution = RESOLUTION_DAILY;
+
+    // Defaults to a daily resolution
+    this.resolution = resolution != undefined ? resolution : RS_CHART_CONSTANTS.resolution_daily;
 
     this.dataItems = {};
 
@@ -264,12 +296,12 @@ function Chart(/* String */ id,
         }
 
         var _this = this;
-        var w =  args['width'] != undefined ? args.width : WIDTH;
-        var h =  args['height'] != undefined ? args.height : HEIGHT;
+        var w =  args['width'] != undefined ? args.width : RS_CHART_CONSTANTS.default_width;
+        var h =  args['height'] != undefined ? args.height : RS_CHART_CONSTANTS.default_height;
         var minVal =  args['min'] != undefined ? args.min : 0;
         var isAjax =  args['ajax'] != undefined ? args.ajax : false;
         var y_default_value =  args['y_default_value'] != undefined ? args.ajax : 0;
-        var x_offset =  args['x_offset'] != undefined ? args.ajax : SECONDS_PER_DAY;
+        var x_offset =  args['x_offset'] != undefined ? args.ajax : RS_CHART_CONSTANTS.seconds_per_day;
 
         this.args = args;
 
@@ -372,8 +404,8 @@ function Chart(/* String */ id,
                         }
 
                         // Limit the number of datapoints in a chart (10M)
-                        if (d[i].data.length > OVERFLOW)
-                            throw OVERFLOW_ERR_MSG;
+                        if (d[i].data.length > RS_CHART_CONSTANTS.overflow)
+                            throw RS_CHART_CONSTANTS.overflow_err_msg;
                     }
 
                     return d;
@@ -401,10 +433,11 @@ function Chart(/* String */ id,
             } );
 
             // Set the resolution controls
+            // TODO - refactor how this control works.
             this.setResolutionCheckControls(new Array("daily", "hourly"));
 
             // Set the update interval and perform the initial update
-            this.interval = setInterval(_this.syncUpdate, MILLISECONDS_PER_MINUTE);
+            this.interval = setInterval(_this.syncUpdate, RS_CHART_CONSTANTS.milliseconds_per_minute);
             this.syncUpdate();
 
         } else {
@@ -492,8 +525,8 @@ function Chart(/* String */ id,
         for (i = 0; i < this.series_data.length; i++) {
             for (j = 0; j < this.series_data[i].data.length; j++) {
                 out += [this.series_data[i].name,
-                        this.series_data[i].data[j].x,
-                        this.series_data[i].data[j].y].join(':') + "\n";
+                    this.series_data[i].data[j].x,
+                    this.series_data[i].data[j].y].join(':') + "\n";
             }
         }
         return out;
@@ -547,7 +580,7 @@ function Chart(/* String */ id,
      * Create a CSV from the series data.
      */
     this.setRefreshTimes = function () {
-        var next = (new Date((new Date).getTime() + MILLISECONDS_PER_MINUTE)).toUTCString();
+        var next = (new Date((new Date).getTime() + RS_CHART_CONSTANTS.milliseconds_per_minute)).toUTCString();
         document.getElementById("refresh_date" + this.id).innerHTML = "<b>Refreshed on:</b>" + (new Date).toUTCString();
         document.getElementById("next_date" + this.id).innerHTML = "<b>Next refresh:</b>" + next;
     };
@@ -569,16 +602,16 @@ function Chart(/* String */ id,
                     switch (event.target.value)
                     {
                         case "daily":
-                            if (_this.resolution != RESOLUTION_DAILY) {
-                                _this.resolution = RESOLUTION_DAILY;
+                            if (_this.resolution != RS_CHART_CONSTANTS.resolution_daily) {
+                                _this.resolution = RS_CHART_CONSTANTS.resolution_daily;
                                 _this.syncUpdate();
                                 _this.graph.render();
                             }
                             break;
 
                         case "hourly":
-                            if (_this.resolution != RESOLUTION_HOURLY) {
-                                _this.resolution = RESOLUTION_HOURLY;
+                            if (_this.resolution != RS_CHART_CONSTANTS.resolution_hourly) {
+                                _this.resolution = RS_CHART_CONSTANTS.resolution_hourly;
                                 _this.syncUpdate();
                                 _this.graph.render();
                             }
