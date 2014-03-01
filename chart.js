@@ -7,7 +7,7 @@
  * Date:       2013-06-10
  * File:       chart.js
  *
- * Defines the chart object that eases the use of Rickshaw [1] charts.
+ * Defines the chart object for that eases the use of Rickshaw [1] charts.
  *
  * [1] https://github.com/shutterstock/rickshaw
  *
@@ -49,7 +49,7 @@ var gl_chart_docs;
  * @param width         - chart width.
  * @param height        - chart height.
  * @param resolution    - time resolution for the chart.
- *
+ * @param show_refresh_times    - time resolution for the chart.
  */
 function chartFactory(/* string */ id,
                       /* Array|string */ series_data,
@@ -60,7 +60,8 @@ function chartFactory(/* string */ id,
                       /* boolean */ is_ajax,
                       /* integer */ width,
                       /* integer */ height,
-                      /* integer */ resolution
+                      /* integer */ resolution,
+                      /* boolean */ show_refresh_times
     ) {
 
     formatter_handle = typeof formatter_handle !== 'undefined' ? formatter_handle : '';
@@ -76,7 +77,8 @@ function chartFactory(/* string */ id,
                 'ajax': true,
                 'formatter_handle': formatter_handle,
                 'docs': docs,
-                'annotations': annotations
+                'annotations': annotations,
+                'show_refresh_times': show_refresh_times
             });
     } else {
         return new Chart(id, series_data, render_type, resolution).
@@ -305,6 +307,7 @@ function Chart(/* String */ id,
         var isAjax =  args['ajax'] != undefined ? args.ajax : false;
         var y_default_value =  args['y_default_value'] != undefined ? args.ajax : 0;
         var x_offset =  args['x_offset'] != undefined ? args.ajax : RS_CHART_CONSTANTS.seconds_per_day;
+        this.show_refresh_times = args['show_refresh_times'] != undefined ? args.show_refresh_times : false;
 
         this.args = args;
 
@@ -315,7 +318,9 @@ function Chart(/* String */ id,
 
             this.syncUpdate = function() {
                 _this.ajaxGraph.request();
-                _this.setRefreshTimes();
+                if (this.show_refresh_times) {
+                    _this.setRefreshTimes();
+                }
             };
 
             this.ajaxGraph = new Rickshaw.Graph.Ajax( {
