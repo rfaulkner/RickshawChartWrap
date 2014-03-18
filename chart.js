@@ -138,6 +138,21 @@ function Formatter() {
             }
         },
 
+        'timeseries_no_commas': {
+
+            formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
+
+                var date = new Date(x * 1000 + RS_CHART_CONSTANTS.milliseconds_per_day);
+                var dateStr = '<span class="date">' + date.toDateString() + ' ' + date.getUTCHours() + 'H' + '</span>';
+                var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+                return swatch + series.name + ": " + y + '<br>' + dateStr;
+            },
+            xFormatter: function(x) {
+                var date = new Date(x * 1000 + RS_CHART_CONSTANTS.milliseconds_per_day);
+                return date.toDateString();
+            }
+        },
+
         'integer_1': {
 
             formatter: function(/* array */ series, /* int - unix_timestamp */ x, /* int  */ y) {
@@ -188,6 +203,9 @@ function Formatter() {
 
             case 'timeseries_2':
                 return formatterContext.Formatters.timeseries_2;
+
+            case 'timeseries_no_commas':
+                return formatterContext.Formatters.timeseries_no_commas;
 
             case 'integer_1':
                 return formatterContext.Formatters.integer_1;
