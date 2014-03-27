@@ -547,7 +547,7 @@ function Chart(/* String */ id,
      */
     this.getCSV = function () {
         var i,j;
-        var out = "name,x,y\n";
+        var out = "Content-Type: text/plain\nname,x,y\n";
         for (i = 0; i < this.series_data.length; i++) {
             for (j = 0; j < this.series_data[i].data.length; j++) {
                 out += [this.series_data[i].name,
