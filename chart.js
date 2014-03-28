@@ -566,10 +566,15 @@ function Chart(/* String */ id,
     this.buildDocs = function (/* String | Array */ doc) {
         this.docs =  doc != undefined ? doc : '_';
 
-        if (doc instanceof Array)
-            document.getElementById("chart_docs" + this.id).innerHTML = '';
-        else
-            document.getElementById("chart_docs" + this.id).innerHTML = this.docs;
+        try {
+            if (doc instanceof Array)
+                document.getElementById("chart_docs" + this.id).innerHTML = '';
+            else
+                document.getElementById("chart_docs" + this.id).innerHTML = this.docs;
+        } catch(err) {
+            console.log('Couldn\'t set docs in Chart::buildDocs: ' + err);
+        }
+
         return this;
     };
 
